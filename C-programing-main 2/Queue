@@ -1,0 +1,117 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Define the structure of a node in the queue
+typedef struct Node {
+    int data;
+    struct Node *next;
+} Node;
+
+// Define the structure of a queue
+typedef struct {
+    Node *front;  // Pointer to the front of the queue
+    Node *rear;   // Pointer to the rear of the queue
+} Queue;
+
+// Function prototypes
+Node* createNode(int data);
+Queue* initializeQueue();
+int isEmpty(Queue *q);
+void enqueue(Queue *q, int data);
+int dequeue(Queue *q);
+void displayQueue(Queue *q);
+
+int main() {
+    Queue *queue = initializeQueue();
+
+    // Enqueue elements into the queue
+    enqueue(queue, 10);
+    enqueue(queue, 20);
+    enqueue(queue, 30);
+
+    // Display the queue contents
+    printf("Queue contents:\n");
+    displayQueue(queue);
+
+    // Dequeue elements from the queue
+    printf("\nDequeued element: %d\n", dequeue(queue));
+    printf("Dequeued element: %d\n", dequeue(queue));
+
+    // Display the updated queue contents
+    printf("\nQueue contents after dequeue:\n");
+    displayQueue(queue);
+
+    return 0;
+}
+
+// Function to create a new node with given data
+Node* createNode(int data) {
+    Node *newNode = (Node *)malloc(sizeof(Node));
+    if (newNode == NULL) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+    newNode->data = data;
+    newNode->next = NULL;
+    return newNode;
+}
+
+// Function to initialize an empty queue
+Queue* initializeQueue() {
+    Queue *q = (Queue *)malloc(sizeof(Queue));
+    if (q == NULL) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+    q->front = q->rear = NULL;
+    return q;
+}
+
+// Function to check if the queue is empty
+int isEmpty(Queue *q) {
+    return q->front == NULL;
+}
+
+// Function to add an element to the rear of the queue (enqueue)
+void enqueue(Queue *q, int data) {
+    Node *newNode = createNode(data);
+    if (isEmpty(q)) {
+        q->front = q->rear = newNode;
+    } else {
+        q->rear->next = newNode;
+        q->rear = newNode;
+    }
+    printf("Enqueued %d into the queue\n", data);
+}
+
+// Function to remove an element from the front of the queue (dequeue)
+int dequeue(Queue *q) {
+    if (isEmpty(q)) {
+        printf("Queue underflow! Cannot dequeue\n");
+        return -1;  // Return an invalid value indicating failure
+    } else {
+        Node *temp = q->front;
+        int data = temp->data;
+        q->front = q->front->next;
+        free(temp);
+        // If queue becomes empty after dequeue
+        if (q->front == NULL) {
+            q->rear = NULL;
+        }
+        return data;
+    }
+}
+
+// Function to display the elements of the queue
+void displayQueue(Queue *q) {
+    if (isEmpty(q)) {
+        printf("Queue is empty\n");
+    } else {
+        Node *current = q->front;
+        while (current != NULL) {
+            printf("%d -> ", current->data);
+            current = current->next;
+        }
+        printf("NULL\n");
+    }
+}

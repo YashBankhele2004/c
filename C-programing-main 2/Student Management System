@@ -1,0 +1,225 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Define the maximum length for student names and file paths
+#define MAX_NAME_LENGTH 100
+#define FILE_PATH "students.dat"
+
+// Define the structure for student records
+typedef struct {
+    int id;
+    char name[MAX_NAME_LENGTH];
+    int age;
+    float gpa;
+} Student;
+
+// Function prototypes
+void addStudent();
+void editStudent();
+void deleteStudent();
+void viewStudents();
+void displayMenu();
+int checkDuplicateID(int id);
+
+int main() {
+    int choice;
+
+    while (1) {
+        displayMenu();
+        printf("Enter your choice: ");
+        if (scanf("%d", &choice) != 1) {
+            while (getchar() != '\n');  // Clear invalid input
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+
+        switch (choice) {
+            case 1:
+                addStudent();
+                break;
+            case 2:
+                editStudent();
+                break;
+            case 3:
+                deleteStudent();
+                break;
+            case 4:
+                viewStudents();
+                break;
+            case 5:
+                printf("Exiting...\n");
+                exit(0);
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    }
+
+    return 0;
+}
+
+// Display the menu options
+void displayMenu() {
+    printf("\n=== Student Management System ===\n");
+    printf("1. Add Student\n");
+    printf("2. Edit Student\n");
+    printf("3. Delete Student\n");
+    printf("4. View Students\n");
+    printf("5. Exit\n");
+}
+
+// Check for duplicate student ID
+int checkDuplicateID(int id) {
+    FILE *file = fopen(FILE_PATH, "rb");
+    if (!file) {
+        return 0; // No duplicates if the file doesn't exist
+    }
+
+    Student student;
+    while (fread(&student, sizeof(Student), 1, file)) {
+        if (student.id == id) {
+            fclose(file);
+            return 1; // Duplicate ID found
+        }
+    }
+    fclose(file);
+    return 0; // No duplicates found
+}
+
+// Add a new student record
+void addStudent() {
+    FILE *file = fopen(FILE_PATH, "ab");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+
+    Student student;
+    printf("Enter student ID: ");
+    scanf("%d", &student.id);
+    if (checkDuplicateID(student.id)) {
+        printf("A student with ID %d already exists. Please use a different ID.\n", student.id);
+        fclose(file);
+        return;
+    }
+
+    getchar();  // Clear the newline character from the buffer
+    printf("Enter student name: ");
+    fgets(student.name, MAX_NAME_LENGTH, stdin);
+    student.name[strcspn(student.name, "\n")] = '\0';  // Remove the newline character
+    printf("Enter student age: ");
+    scanf("%d", &student.age);
+    printf("Enter student GPA: ");
+    scanf("%f", &student.gpa);
+
+    fwrite(&student, sizeof(Student), 1, file);
+    fclose(file);
+
+    printf("Student added successfully!\n");
+}
+
+// Edit an existing student record
+void editStudent() {
+    FILE *file = fopen(FILE_PATH, "rb+");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+
+    int id;
+    printf("Enter student ID to edit: ");
+    scanf("%d", &id);
+
+    Student student;
+    int found = 0;
+
+    while (fread(&student, sizeof(Student), 1, file)) {
+        if (student.id == id) {
+            found = 1;
+            printf("Enter new student name: ");
+            getchar();  // Clear the newline character from the buffer
+            fgets(student.name, MAX_NAME_LENGTH, stdin);
+            student.name[strcspn(student.name, "\n")] = '\0';  // Remove the newline character
+            printf("Enter new student age: ");
+            scanf("%d", &student.age);
+            printf("Enter new student GPA: ");
+            scanf("%f", &student.gpa);
+
+            fseek(file, -sizeof(Student), SEEK_CUR);
+            fwrite(&student, sizeof(Student), 1, file);
+            break;
+        }
+    }
+
+    fclose(file);
+
+    if (found) {
+        printf("Student record updated successfully!\n");
+    } else {
+        printf("Student with ID %d not found.\n", id);
+    }
+}
+
+// Delete an existing student record
+void deleteStudent() {
+    FILE *file = fopen(FILE_PATH, "rb");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+
+    FILE *tempFile = fopen("temp.dat", "wb");
+    if (!tempFile) {
+        perror("Error opening temporary file");
+        fclose(file);
+        return;
+    }
+
+    int id;
+    printf("Enter student ID to delete: ");
+    scanf("%d", &id);
+
+    Student student;
+    int found = 0;
+
+    while (fread(&student, sizeof(Student), 1, file)) {
+        if (student.id == id) {
+            found = 1;
+        } else {
+            fwrite(&student, sizeof(Student), 1, tempFile);
+        }
+    }
+
+    fclose(file);
+    fclose(tempFile);
+
+    remove(FILE_PATH);
+    rename("temp.dat", FILE_PATH);
+
+    if (found) {
+        printf("Student record deleted successfully!\n");
+    } else {
+        printf("Student with ID %d not found.\n");
+    }
+}
+
+// View all student records
+void viewStudents() {
+    FILE *file = fopen(FILE_PATH, "rb");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+
+    Student student;
+    printf("\n=== Student Records ===\n");
+
+    while (fread(&student, sizeof(Student), 1, file)) {
+        printf("ID: %d\n", student.id);
+        printf("Name: %s\n", student.name);
+        printf("Age: %d\n", student.age);
+        printf("GPA: %.2f\n\n", student.gpa);
+    }
+
+    fclose(file);
+}

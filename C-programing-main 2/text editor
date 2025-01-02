@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Function to read the content of a file
+void readFile(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Error: Could not open file %s for reading.\n", filename);
+        return;
+    }
+
+    char ch;
+    while ((ch = fgetc(file)) != EOF) {
+        putchar(ch);
+    }
+
+    fclose(file);
+}
+
+// Function to write content to a file
+void writeFile(const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error: Could not open file %s for writing.\n", filename);
+        return;
+    }
+
+    printf("Enter text (Press Ctrl+D to save and exit):\n");
+    char ch;
+    while ((ch = getchar()) != EOF) {
+        fputc(ch, file);
+    }
+
+    fclose(file);
+}
+
+int main() {
+    char filename[100];
+    int choice;
+
+    printf("Simple Text Editor\n");
+    printf("1. Open a file\n");
+    printf("2. Create a new file\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+    getchar(); // to consume the newline character left by scanf
+
+    printf("Enter the filename: ");
+    scanf("%s", filename);
+    getchar(); // to consume the newline character left by scanf
+
+    switch (choice) {
+        case 1:
+            readFile(filename);
+            break;
+        case 2:
+            writeFile(filename);
+            break;
+        default:
+            printf("Invalid choice!\n");
+            break;
+    }
+
+    return 0;
+}
